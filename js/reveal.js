@@ -419,9 +419,6 @@
 		// Listen to messages posted to this window
 		setupPostMessage();
 
-		// Prevent the slides from being scrolled out of view
-		setupScrollPrevention();
-
 		// Resets all vertical slides so that only the first is visible
 		resetVerticalSlides();
 
@@ -661,13 +658,24 @@
 	 */
 	function setupScrollPrevention() {
 
-		setInterval( function() {
+		scrollPreventionInterval = setInterval( function() {
 			if( dom.wrapper.scrollTop !== 0 || dom.wrapper.scrollLeft !== 0 ) {
 				dom.wrapper.scrollTop = 0;
 				dom.wrapper.scrollLeft = 0;
 			}
 		}, 1000 );
 
+	}
+
+	/** Interval for clearing scroll prevention. */
+	var scrollPreventionInterval;
+
+	/**
+	 * Clear the scroll prevention interval to enable scrolling,
+	 * e.g. for embedded presentations.
+	 */
+	function clearScrollPrevention() {
+		clearInterval(scrollPreventionInterval)
 	}
 
 	/**
@@ -912,6 +920,13 @@
 
 		if( config.shuffle ) {
 			shuffle();
+		}
+
+		if( config.preventScrolling ) {
+			// Prevent the slides from being scrolled out of view
+			setupScrollPrevention()
+		} else {
+			clearScrollPrevention()
 		}
 
 		if( config.rtl ) {
@@ -1648,16 +1663,23 @@
 				}
 
 				if( config.center || slide.classList.contains( 'center' ) ) {
-					// Vertical stacks are not centred since their section
-					// children will be
-					if( slide.classList.contains( 'stack' ) ) {
-						slide.style.top = 0;
+					if ( config.embedded ) {
+						debugger
+						var slideHeight = getAbsoluteHeight(slide)
+						slide.style.top = ( ( size.height - slideHeight ) / 2 ) - slidePadding
 					}
 					else {
-						slide.style.top = Math.max( ( ( size.height - getAbsoluteHeight( slide ) ) / 2 ) - slidePadding, 0 ) + 'px';
+						// Vertical stacks are not centred since their section
+						// children will be
+						if( slide.classList.contains( 'stack' ) ) {
+							slide.style.top = 0;
+						}
+						else {
+							slide.style.top = Math.max( ( ( size.height - getAbsoluteHeight( slide ) ) / 2 ) - slidePadding, 0 ) + 'px';
+						}
 					}
-				}
-				else {
+				
+				} else {
 					slide.style.top = '';
 				}
 
